@@ -1,5 +1,6 @@
 import type { Moment } from "moment";
-import { addIcon, Plugin, TFile } from "obsidian";
+import { addIcon, Plugin, TFile, Keymap } from "obsidian";
+import type { PaneType } from "obsidian";
 import { writable, type Writable } from "svelte/store";
 
 import PeriodicNotesAPI from "./api";
@@ -47,7 +48,7 @@ import {
 } from "./utils";
 
 interface IOpenOpts {
-  inNewSplit?: boolean;
+  leaftype?: boolean | PaneType;
   calendarSet?: string;
 }
 
@@ -138,7 +139,7 @@ export default class PeriodicNotesPlugin extends Plugin {
         (e: MouseEvent) => {
           if (e.type !== "auxclick") {
             this.openPeriodicNote(granularity, window.moment(), {
-              inNewSplit: isMetaPressed(e),
+              leaftype: Keymap.isModEvent(e),
             });
           }
         }
@@ -291,11 +292,11 @@ export default class PeriodicNotesPlugin extends Plugin {
     date: Moment,
     opts?: IOpenOpts
   ): Promise<void> {
-    const { inNewSplit = false, calendarSet } = opts ?? {};
+    const { leaftype=false, calendarSet } = opts ?? {};
     const { workspace } = this.app;
     const file = await this.createOrReturnPeriodicNote(granularity, date, calendarSet);
 
-    const leaf = inNewSplit ? workspace.splitActiveLeaf() : workspace.getUnpinnedLeaf();
+    const leaf = workspace.getLeaf(leaftype);
     await leaf.openFile(file, { active: true });
   }
 }
